@@ -1,2 +1,4 @@
 Pleas install easyx before installing this progranm.
-You can learn about everything about this program at the "ABOUT" page of the program.
+You can learn about every function about this program at the "ABOUT" page of the program.
+Before running the program,please change the path of "english.csv" and "stared_english" to ensure proper operation of procedures.
+you can also import the words you want into the csv file but following the format of "pos,chinese,english,answercorrect,learned,index"
