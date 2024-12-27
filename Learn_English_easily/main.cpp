@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS 1
-#include <stdlib.h> // °üº¬stdlib.hÒÔÊ¹ÓÃEXIT_FAILUREw
+#include <stdlib.h> // åŒ…å«stdlib.hä»¥ä½¿ç”¨EXIT_FAILUREw
 #include <easyx.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,15 +7,15 @@
 #include "word.h"
 #include <conio.h>
 #define MAX_WORD_LENGTH 100
-#define MAX_WORDS 1000 // ¼ÙÉè×î¶àÓĞ1000¸öµ¥´Ê
+#define MAX_WORDS 1000 // å‡è®¾æœ€å¤šæœ‰1000ä¸ªå•è¯
 
-Word words[MAX_WORDS]; // ´æ´¢ËùÓĞµ¥´Ê
+Word words[MAX_WORDS]; // å­˜å‚¨æ‰€æœ‰å•è¯
 int wordCount = 0;
-Word selectedWords[10]; // ´æ´¢10¸öÑ¡ÖĞµÄµ¥´Ê
-int currentWordIndex = 0; // µ±Ç°ÏÔÊ¾µÄµ¥´ÊË÷Òı
-bool skipButton = false; // ¿ØÖÆ¡°skip¡±°´Å¥ÊÇ·ñ¿É¼ûµÄ±êÖ¾Î»
-char inputWord[MAX_WORD_LENGTH]; // ´æ´¢ÓÃ»§ÊäÈëµÄÓ¢ÎÄµ¥´Ê
-bool inputVisible = true; // ¿ØÖÆÊäÈë¿òÊÇ·ñ¿É¼ûµÄ±êÖ¾Î»
+Word selectedWords[10]; // å­˜å‚¨10ä¸ªé€‰ä¸­çš„å•è¯
+int currentWordIndex = 0; // å½“å‰æ˜¾ç¤ºçš„å•è¯ç´¢å¼•
+bool skipButton = false; // æ§åˆ¶â€œskipâ€æŒ‰é’®æ˜¯å¦å¯è§çš„æ ‡å¿—ä½
+char inputWord[MAX_WORD_LENGTH]; // å­˜å‚¨ç”¨æˆ·è¾“å…¥çš„è‹±æ–‡å•è¯
+bool inputVisible = true; // æ§åˆ¶è¾“å…¥æ¡†æ˜¯å¦å¯è§çš„æ ‡å¿—ä½
 bool isStartVisible = false;
 bool isSearchVisible = false;
 bool isProgressVisible = false;
@@ -24,24 +24,25 @@ bool checkWord(const char* userWord, const char* correctWord) {
     return strcmp(userWord, correctWord) == 0;
 }
 char searchWord[MAX_WORD_LENGTH];
+int state = 0;//1ä¸ºå­¦ä¹ ï¼Œ0ä¸ºå¤ä¹ 
 
-// °´Å¥½á¹¹Ìå¶¨Òå
+// æŒ‰é’®ç»“æ„ä½“å®šä¹‰
 typedef struct {
-    int x, y, w, h; // °´Å¥µÄÎ»ÖÃºÍ´óĞ¡
-    const char* text; // °´Å¥ÉÏÏÔÊ¾µÄÎÄ±¾
+    int x, y, w, h; // æŒ‰é’®çš„ä½ç½®å’Œå¤§å°
+    const char* text; // æŒ‰é’®ä¸Šæ˜¾ç¤ºçš„æ–‡æœ¬
     bool need_tip;
-    const char* tooltip; // °´Å¥µÄÌáÊ¾ĞÅÏ¢
+    const char* tooltip; // æŒ‰é’®çš„æç¤ºä¿¡æ¯
 } Button;
 
 bool setting_button = false;
 bool clear_button = false;
-bool isMenuVisible = true; // ¿ØÖÆ²Ëµ¥ÊÇ·ñ¿É¼ûµÄ±êÖ¾Î»
+bool isMenuVisible = true; // æ§åˆ¶èœå•æ˜¯å¦å¯è§çš„æ ‡å¿—ä½
 
 ExMessage msg = { 0 };
 
 
 
-// È«¾Ö±äÁ¿infoArray
+// å…¨å±€å˜é‡infoArray
 char** infoArray = NULL;
 void drawText() {
     settextstyle(20, 0, "bauhaus 93");
@@ -68,10 +69,10 @@ void drawButton(Button btn) {
     int vSpace = (btn.h - textheight(btn.text)) / 2;
     outtextxy(btn.x + hSpace, btn.y + vSpace, btn.text);
 
-    // ½öÔÚÊó±êĞüÍ£Ê±»æÖÆÌáÊ¾ĞÅÏ¢
+    // ä»…åœ¨é¼ æ ‡æ‚¬åœæ—¶ç»˜åˆ¶æç¤ºä¿¡æ¯
     if (inArea(msg.x, msg.y, btn.x, btn.y, btn.w, btn.h) && btn.need_tip == true) {
-        setfillcolor(RGB(173, 216, 230)); // Ç³À¶É«
-        settextcolor(RGB(0, 0, 128)); // ÉîÀ¶É«
+        setfillcolor(RGB(173, 216, 230)); // æµ…è“è‰²
+        settextcolor(RGB(0, 0, 128)); // æ·±è“è‰²
         settextstyle(16, 0, "Arial");
         fillroundrect(btn.x + btn.w + 10, btn.y, btn.x + btn.w + textwidth(btn.tooltip) + 20, btn.y + textheight(btn.tooltip) + 10, 5, 5);
         outtextxy(btn.x + btn.w + 15, btn.y + 5, btn.tooltip);
@@ -84,7 +85,7 @@ void background() {
     setlinestyle(PS_SOLID, 1);
     setbkcolor(WHITE);
     cleardevice();
-    loadimage(NULL, _T("C:/Users/lyh23/Pictures/ÄÏ²ı´óÑ§.jpg"));
+    loadimage(NULL, _T("C:/Users/lyh23/Pictures/å—æ˜Œå¤§å­¦.jpg"));
     drawText();
     settextstyle(48, 0, "Showcard Gothic");
     int title_x = (500 - textwidth("Recite English Easily!!!")) / 2;
@@ -94,99 +95,117 @@ void background() {
 
 
 void drawReturnButton() {
-    Button returnBtn = { 10, 10, 100, 40, "RETURN", false, "Back to menu" };
+    Button returnBtn = { 10, 10, 100, 40, "RETURN", false, " " };
     drawText();
     drawButton(returnBtn);
 }
 
 void clearCurrentWordArea() {
-    setfillcolor(WHITE); // ÉèÖÃÌî³äÑÕÉ«Îª°×É«£¬ÒÔ¸²¸ÇÖ®Ç°µÄÎÄ±¾
-    // ¼ÆËãĞèÒªÇå³ıµÄÇøÓò£¬ÕâÀï¼ÙÉèµ¥´ÊÏÔÊ¾µÄ×î´ó¸ß¶ÈÎª100ÏñËØ
+    setfillcolor(WHITE); // è®¾ç½®å¡«å……é¢œè‰²ä¸ºç™½è‰²ï¼Œä»¥è¦†ç›–ä¹‹å‰çš„æ–‡æœ¬
+    // è®¡ç®—éœ€è¦æ¸…é™¤çš„åŒºåŸŸï¼Œè¿™é‡Œå‡è®¾å•è¯æ˜¾ç¤ºçš„æœ€å¤§é«˜åº¦ä¸º100åƒç´ 
     int clearHeight = 100;
-    clearrectangle(110, 200, 500, 200 + clearHeight); // Ö»Çå³ıµ¥´ÊµÄÇøÓò
+    clearrectangle(110, 200, 500, 200 + clearHeight); // åªæ¸…é™¤å•è¯çš„åŒºåŸŸ
 }
 
 void getUserInput() {
-    inputVisible = true; // ÏÔÊ¾ÊäÈë¿ò
+    inputVisible = true; // æ˜¾ç¤ºè¾“å…¥æ¡†
     char userWord[MAX_WORD_LENGTH];
-    // ÏÔÊ¾ÊäÈë¿ò²¢»ñÈ¡ÓÃ»§ÊäÈë
+    // æ˜¾ç¤ºè¾“å…¥æ¡†å¹¶è·å–ç”¨æˆ·è¾“å…¥
     InputBox(userWord, MAX_WORD_LENGTH, "Enter the word");
     if (userWord != NULL) {
-        // ¼ì²éÓÃ»§ÊäÈëµÄµ¥´ÊÊÇ·ñÕıÈ·
+        // æ£€æŸ¥ç”¨æˆ·è¾“å…¥çš„å•è¯æ˜¯å¦æ­£ç¡®
         if (checkWord(userWord, selectedWords[currentWordIndex].english)) {
-            // µ¥´ÊÕıÈ·
+            // å•è¯æ­£ç¡®
             printf("Correct!\n");
         }
         else {
-            // µ¥´Ê´íÎó
+            // å•è¯é”™è¯¯
             printf("Wrong! The correct word is: %s\n", selectedWords[currentWordIndex].english);
         }
-        inputVisible = false; // Òş²ØÊäÈë¿ò
+        inputVisible = false; // éšè—è¾“å…¥æ¡†
+    }
+}
+
+void updateWordsFromSelected() {
+    if (state == 1) {
+        for (int i = 0; i < 10; i++) {
+            int originalIndex = selectedWords[i].index; // å‡è®¾æ¯ä¸ªWordæœ‰ä¸€ä¸ªæŒ‡å‘wordsæ•°ç»„ä¸­åŸå§‹å•è¯çš„ç´¢å¼•
+            words[originalIndex].learned = selectedWords[i].learned;
+            words[originalIndex].correctAnswers = selectedWords[i].correctAnswers;
+        }
     }
 }
 
 void drawCurrentWord() {
-    if (!isMenuVisible && isStartVisible) { // Ö»ÔÚ START ½çÃæ»æÖÆ
-        settextstyle(48, 0, "Î¢ÈíÑÅºÚ");
+    if (!isMenuVisible && isStartVisible) { // åªåœ¨ START ç•Œé¢ç»˜åˆ¶
+        settextstyle(48, 0, "å¾®è½¯é›…é»‘");
         settextcolor(BLACK);
         setbkmode(TRANSPARENT);
 
-        // Çå³ıÖ®Ç°µ¥´ÊµÄÇøÓò
-        
+        // æ¸…é™¤ä¹‹å‰å•è¯çš„åŒºåŸŸ
         clearCurrentWordArea();
 
-        int centerX = 500 / 2;
-        int centerY = 250; // ¹Ì¶¨ÖĞĞÄÎ»ÖÃ
+        // æ‰¾åˆ°ç¬¬ä¸€ä¸ªæœªå­¦ä¼šçš„å•è¯å¹¶ç»˜åˆ¶
+        while (currentWordIndex < 10 && selectedWords[currentWordIndex].learned) {
+            currentWordIndex++; // å¦‚æœå½“å‰å•è¯å·²å­¦ä¼šï¼Œç§»åŠ¨åˆ°ä¸‹ä¸€ä¸ª
+        }
 
-        // ¼ÆËã´ÊĞÔºÍÖĞÎÄÊÍÒåµÄ×Ü¿í¶È
-        int totalWidth = textwidth(selectedWords[currentWordIndex].pos) + textwidth(selectedWords[currentWordIndex].chinese) + 10;
+        if (currentWordIndex < 10) { // å¦‚æœæ‰¾åˆ°äº†æœªå­¦ä¼šçš„å•è¯
+            Word currentWord = selectedWords[currentWordIndex];
 
-        // ¼ÆËã´ÊĞÔµÄÎ»ÖÃ£¬Ê¹ÆäÎ»ÓÚÖĞÎÄÊÍÒåµÄ×ó±ß
-        int posX = centerX - (totalWidth / 2);
-        int posY = centerY;
+            int centerX = 500 / 2;
+            int centerY = 250; // å›ºå®šä¸­å¿ƒä½ç½®
 
-        // ¼ÆËãÖĞÎÄÊÍÒåµÄÎ»ÖÃ£¬Ê¹ÆäÎ»ÓÚ´ÊĞÔµÄÓÒ±ß
-        int chineseX = posX + textwidth(selectedWords[currentWordIndex].pos) + 5;
-        int chineseY = centerY;
+            // è®¡ç®—è¯æ€§å’Œä¸­æ–‡é‡Šä¹‰çš„æ€»å®½åº¦
+            int totalWidth = textwidth(currentWord.pos) + textwidth(currentWord.chinese) + 10;
 
-        // »æÖÆ´ÊĞÔ
-        outtextxy(posX, posY, selectedWords[currentWordIndex].pos);
+            // è®¡ç®—è¯æ€§çš„ä½ç½®ï¼Œä½¿å…¶ä½äºä¸­æ–‡é‡Šä¹‰çš„å·¦è¾¹
+            int posX = centerX - (totalWidth / 2);
+            int posY = centerY;
 
-        // »æÖÆÖĞÎÄÊÍÒå
-        outtextxy(chineseX, chineseY, selectedWords[currentWordIndex].chinese);
+            // è®¡ç®—ä¸­æ–‡é‡Šä¹‰çš„ä½ç½®ï¼Œä½¿å…¶ä½äºè¯æ€§çš„å³è¾¹
+            int chineseX = posX + textwidth(currentWord.pos) + 5;
+            int chineseY = centerY;
 
-        // »æÖÆÊäÈë¿ò
-        settextstyle(20, 0, "Î¢ÈíÑÅºÚ");
-        settextcolor(BLACK);
-        setbkmode(TRANSPARENT);
-        setfillcolor(RGB(240, 240, 240));
-        fillrectangle(100, 300, 400, 340);
-        setlinecolor(RGB(160, 160, 160));
-        rectangle(100, 300, 400, 340);
+            // ç»˜åˆ¶è¯æ€§
+            outtextxy(posX, posY, currentWord.pos);
 
-        // »æÖÆÌáÊ¾ÎÄ±¾
-        outtextxy(105, 305, "Type the English word:");
+            // ç»˜åˆ¶ä¸­æ–‡é‡Šä¹‰
+            outtextxy(chineseX, chineseY, currentWord.chinese);
 
-        // Èç¹ûÊäÈë¿ò¿É¼û£¬»æÖÆµ±Ç°ÊäÈëµÄµ¥´Ê
-        if (strlen(inputWord) * textwidth(' ') < 300) {
-            outtextxy(105 + textwidth("Type the English word:"), 305, inputWord);
+            // ç»˜åˆ¶è¾“å…¥æ¡†
+            settextstyle(20, 0, "å¾®è½¯é›…é»‘");
+            settextcolor(BLACK);
+            setbkmode(TRANSPARENT);
+            setfillcolor(RGB(240, 240, 240));
+            fillrectangle(100, 300, 400, 340);
+            setlinecolor(RGB(160, 160, 160));
+            rectangle(100, 300, 400, 340);
+
+            // ç»˜åˆ¶æç¤ºæ–‡æœ¬
+            outtextxy(105, 305, "Type the English word:");
+
+            // å¦‚æœè¾“å…¥æ¡†å¯è§ï¼Œç»˜åˆ¶å½“å‰è¾“å…¥çš„å•è¯
+            if (strlen(inputWord) * textwidth(' ') < 300) {
+                outtextxy(105 + textwidth("Type the English word:"), 305, inputWord);
+            }
+            else {
+                int start = strlen(inputWord) - (300 / textwidth(' '));
+                char tempWord[MAX_WORD_LENGTH];
+                strncpy(tempWord, inputWord + start, sizeof(tempWord));
+                tempWord[sizeof(tempWord) - 1] = '\0';
+                outtextxy(105 + textwidth("Type the English word:"), 305, tempWord);
+            }
         }
         else {
-            int start = strlen(inputWord) - (300 / textwidth(' '));
-            char tempWord[MAX_WORD_LENGTH];
-            strncpy(tempWord, inputWord + start, sizeof(tempWord));
-            tempWord[sizeof(tempWord) - 1] = '\0';
-            outtextxy(105 + textwidth("Type the English word:"), 305, tempWord);
+            updateWordsFromSelected();
+            clear_button = false; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ˜¾ç¤º
+            isMenuVisible = true; // èœå•å¯è§
+            setting_button = false; // é‡ç½®è®¾ç½®æŒ‰é’®çŠ¶æ€
+            isStartVisible = false;
+            isSearchVisible = false;
+            background(); // é‡ç»˜èœå•ç•Œé¢
         }
-    }
-}
-
-
-void updateWordsFromSelected() {
-    for (int i = 0; i < 10; i++) {
-        int originalIndex = selectedWords[i].index; // ¼ÙÉèÃ¿¸öWordÓĞÒ»¸öÖ¸ÏòwordsÊı×éÖĞÔ­Ê¼µ¥´ÊµÄË÷Òı
-        words[originalIndex].learned = selectedWords[i].learned;
-        words[originalIndex].correctAnswers = selectedWords[i].correctAnswers;
     }
 }
 
@@ -204,15 +223,15 @@ void reviewUnlearnedWords() {
     if (allLearned) {
         updateWordsFromSelected();
         printf("All words have been learned. Starting a new cycle.\n");
-        clear_button = false; // ÉèÖÃ±êÖ¾Î»£¬±íÊ¾°´Å¥Ó¦¸ÃÏÔÊ¾
-        isMenuVisible = true; // ²Ëµ¥¿É¼û
-        setting_button = false; // ÖØÖÃÉèÖÃ°´Å¥×´Ì¬
-        background(); // ÖØ»æ²Ëµ¥½çÃæu
+        clear_button = false; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ˜¾ç¤º
+        isMenuVisible = true; // èœå•å¯è§
+        setting_button = false; // é‡ç½®è®¾ç½®æŒ‰é’®çŠ¶æ€
+        background(); // é‡ç»˜èœå•ç•Œé¢u
     }
 }
 
 
-// ÔÚÖ÷Ñ­»·ÖĞ´¦ÀíÓÃ»§ÊäÈë
+// åœ¨ä¸»å¾ªç¯ä¸­å¤„ç†ç”¨æˆ·è¾“å…¥
 void processInput() {
     
     if (!isMenuVisible && inputVisible && isStartVisible) {
@@ -222,20 +241,20 @@ void processInput() {
             if (ch == '\b') {
                 if (strlen(inputWord) > 0) {
                     inputWord[strlen(inputWord) - 1] = '\0';
-                    clearrectangle(105 + textwidth("Type the English word:"), 305, 500, 340); // Çå³ıÊäÈë¿òÖĞµÄÄÚÈİ
-                    outtextxy(105 + textwidth("Type the English word:"), 305, inputWord); // ÏÔÊ¾¸üĞÂºóµÄÊäÈë¿òÄÚÈİ
+                    clearrectangle(105 + textwidth("Type the English word:"), 305, 500, 340); // æ¸…é™¤è¾“å…¥æ¡†ä¸­çš„å†…å®¹
+                    outtextxy(105 + textwidth("Type the English word:"), 305, inputWord); // æ˜¾ç¤ºæ›´æ–°åçš„è¾“å…¥æ¡†å†…å®¹
                 }
             }
             else if (ch == '\r') {
-                setfillcolor(WHITE); // ÉèÖÃÌî³äÑÕÉ«Îª°×É«£¬ÒÔÇå³ıÖ®Ç°µÄÊä³ö
-                clearrectangle(100, 350, 400, 390); // Çå³ıÖ®Ç°µÄÊä³öÇøÓò
+                setfillcolor(WHITE); // è®¾ç½®å¡«å……é¢œè‰²ä¸ºç™½è‰²ï¼Œä»¥æ¸…é™¤ä¹‹å‰çš„è¾“å‡º
+                clearrectangle(100, 350, 400, 390); // æ¸…é™¤ä¹‹å‰çš„è¾“å‡ºåŒºåŸŸ
 
                 if (checkWord(inputWord, selectedWords[currentWordIndex].english)) {
                     if (!selectedWords[currentWordIndex].learned) {
                         selectedWords[currentWordIndex].correctAnswers++;
                         char correctMsg[MAX_WORD_LENGTH * 2];
                         sprintf(correctMsg, "Correct! (%d/3)", selectedWords[currentWordIndex].correctAnswers);
-                        settextstyle(20, 0, "Î¢ÈíÑÅºÚ");
+                        settextstyle(20, 0, "å¾®è½¯é›…é»‘");
                         settextcolor(BLACK);
                         setbkmode(TRANSPARENT);
                         outtextxy(100, 350, correctMsg);
@@ -244,30 +263,27 @@ void processInput() {
                             outtextxy(100, 370, "This word has been learned.");
                         }
                     }
-                    else {
-                        outtextxy(100, 350, "This word is already learned.");
-                    }
                 }
                 else {
                     char errorMsg[MAX_WORD_LENGTH * 2];
                     sprintf(errorMsg, "Wrong! The correct word is: %s", selectedWords[currentWordIndex].english);
-                    settextstyle(20, 0, "Î¢ÈíÑÅºÚ");
+                    settextstyle(20, 0, "å¾®è½¯é›…é»‘");
                     settextcolor(BLACK);
                     setbkmode(TRANSPARENT);
                     outtextxy(100, 350, errorMsg);
-                    selectedWords[currentWordIndex].correctAnswers = 0; // ´ğ´íÒ»´Î£¬´ğ¶Ô´ÎÊı¹éÁã
-                    selectedWords[currentWordIndex].learned = false; // ´ğ´íÒ»´Î£¬ÖØÖÃÎªÎ´Ñ§»á×´Ì¬
+                    selectedWords[currentWordIndex].correctAnswers = 0; // ç­”é”™ä¸€æ¬¡ï¼Œç­”å¯¹æ¬¡æ•°å½’é›¶
+                    selectedWords[currentWordIndex].learned = false; // ç­”é”™ä¸€æ¬¡ï¼Œé‡ç½®ä¸ºæœªå­¦ä¼šçŠ¶æ€
                 }
-                strcpy(inputWord, ""); // Çå¿ÕÊäÈë¿ò
+                strcpy(inputWord, ""); // æ¸…ç©ºè¾“å…¥æ¡†
                 inputVisible = false;
                 if (currentWordIndex < 9) {
                     currentWordIndex++;
                     clearrectangle(300, 500, 500, 598);
-                    drawCurrentWord(); // »æÖÆÏÂÒ»¸öµ¥´Ê
-                    inputVisible = true; // ÖØĞÂÏÔÊ¾ÊäÈë¿ò
+                    drawCurrentWord(); // ç»˜åˆ¶ä¸‹ä¸€ä¸ªå•è¯
+                    inputVisible = true; // é‡æ–°æ˜¾ç¤ºè¾“å…¥æ¡†
                 }
                 else {
-                    // ËùÓĞµ¥´Ê¶¼ÒÑ»Ø´ğ£¬×¼±¸ÖØĞÂÌáÎÊÎ´Ñ§»áµÄµ¥´Ê
+                    // æ‰€æœ‰å•è¯éƒ½å·²å›ç­”ï¼Œå‡†å¤‡é‡æ–°æé—®æœªå­¦ä¼šçš„å•è¯
                     currentWordIndex = 0;
                     reviewUnlearnedWords();
                 }
@@ -277,8 +293,8 @@ void processInput() {
                 if (len < MAX_WORD_LENGTH - 1) {
                     inputWord[len] = ch;
                     inputWord[len + 1] = '\0';
-                    clearrectangle(105 + textwidth("Type the English word:"), 305, 500, 340); // Çå³ıÊäÈë¿òÖĞµÄÄÚÈİ
-                    outtextxy(105 + textwidth("Type the English word:"), 305, inputWord); // ÏÔÊ¾¸üĞÂºóµÄÊäÈë¿òÄÚÈİ
+                    clearrectangle(105 + textwidth("Type the English word:"), 305, 500, 340); // æ¸…é™¤è¾“å…¥æ¡†ä¸­çš„å†…å®¹
+                    outtextxy(105 + textwidth("Type the English word:"), 305, inputWord); // æ˜¾ç¤ºæ›´æ–°åçš„è¾“å…¥æ¡†å†…å®¹
                 }
             }
         }
@@ -286,10 +302,10 @@ void processInput() {
             if (currentWordIndex < 9) {
                 selectedWords[currentWordIndex].learned = true;
                 currentWordIndex++;
-                clearCurrentWordArea(); // Çå³ıµ±Ç°µ¥´ÊÇøÓò
+                clearCurrentWordArea(); // æ¸…é™¤å½“å‰å•è¯åŒºåŸŸ
                 clearrectangle(300, 500, 500, 598);
-                strcpy(inputWord, ""); // Çå¿ÕÊäÈë¿ò
-                drawCurrentWord(); // »æÖÆÏÂÒ»¸öµ¥´Ê
+                strcpy(inputWord, ""); // æ¸…ç©ºè¾“å…¥æ¡†
+                drawCurrentWord(); // ç»˜åˆ¶ä¸‹ä¸€ä¸ªå•è¯
 
             }
             else if (currentWordIndex == 9) {
@@ -297,10 +313,10 @@ void processInput() {
                 reviewUnlearnedWords();
                 if (allLearned) {
                     updateWordsFromSelected();
-                    clear_button = false; // ÉèÖÃ±êÖ¾Î»£¬±íÊ¾°´Å¥Ó¦¸ÃÏÔÊ¾
-                    isMenuVisible = true; // ²Ëµ¥¿É¼û
-                    setting_button = false; // ÖØÖÃÉèÖÃ°´Å¥×´Ì¬
-                    background(); // ÖØ»æ²Ëµ¥½çÃæ
+                    clear_button = false; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ˜¾ç¤º
+                    isMenuVisible = true; // èœå•å¯è§
+                    setting_button = false; // é‡ç½®è®¾ç½®æŒ‰é’®çŠ¶æ€
+                    background(); // é‡ç»˜èœå•ç•Œé¢
                 }
 
             }
@@ -310,9 +326,9 @@ void processInput() {
 }
 
 void searchInput() {
-    settextstyle(20, 0, "Î¢ÈíÑÅºÚ");
+    settextstyle(20, 0, "å¾®è½¯é›…é»‘");
     settextcolor(BLACK);
-    setbkmode(TRANSPARENT); // ÉèÖÃ±³¾°Ä£Ê½ÎªÍ¸Ã÷
+    setbkmode(TRANSPARENT); // è®¾ç½®èƒŒæ™¯æ¨¡å¼ä¸ºé€æ˜
     
     if (!isMenuVisible && isSearchVisible) {
         if (_kbhit()) {
@@ -321,65 +337,63 @@ void searchInput() {
                 if (strlen(searchWord) > 0) {
                     searchWord[strlen(searchWord) - 1] = '\0';
                     setbkcolor(RGB(240, 240, 240));
-                    clearrectangle(105 + textwidth("Type the English word:"), 301, 399, 339); // Çå³ıÊäÈë¿òÖĞµÄÄÚÈİ
-                    outtextxy(105 + textwidth("Type the English word:"), 305, searchWord); // ÏÔÊ¾¸üĞÂºóµÄÊäÈë¿òÄÚÈİ
+                    clearrectangle(105 + textwidth("Type the English word:"), 301, 399, 339); // æ¸…é™¤è¾“å…¥æ¡†ä¸­çš„å†…å®¹
+                    outtextxy(105 + textwidth("Type the English word:"), 305, searchWord); // æ˜¾ç¤ºæ›´æ–°åçš„è¾“å…¥æ¡†å†…å®¹
                     
                 }
             }
             else if (ch == '\r' ) {
                 setbkcolor(WHITE);
-                setfillcolor(WHITE); // ÉèÖÃÌî³äÑÕÉ«Îª°×É«£¬ÒÔÇå³ıÖ®Ç°µÄÊä³ö
+                setfillcolor(WHITE); // è®¾ç½®å¡«å……é¢œè‰²ä¸ºç™½è‰²ï¼Œä»¥æ¸…é™¤ä¹‹å‰çš„è¾“å‡º
                 setbkcolor(RGB(240, 240, 240));
                 solidrectangle(100, 100, 500, 298);
                 solidrectangle(0, 350, 500, 700);
                 solidrectangle(0, 350, 500, 700);
                 for (int i = 0; i < MAX_WORDS; i++) {
-                    if (strcmp(searchWord, words[i].english) == 0) { // Ê¹ÓÃ strcmp ½øĞĞ×Ö·û´®±È½Ï
-                        settextstyle(48, 0, "Î¢ÈíÑÅºÚ");
+                    if (strcmp(searchWord, words[i].english) == 0) { // ä½¿ç”¨ strcmp è¿›è¡Œå­—ç¬¦ä¸²æ¯”è¾ƒ
+                        settextstyle(48, 0, "å¾®è½¯é›…é»‘");
                         int centerX = 500 / 2;
-                        int centerY = 250; // ¹Ì¶¨ÖĞĞÄÎ»ÖÃ
+                        int centerY = 250; // å›ºå®šä¸­å¿ƒä½ç½®
 
-                        // ¼ÆËã´ÊĞÔºÍÖĞÎÄÊÍÒåµÄ×Ü¿í¶È
+                        // è®¡ç®—è¯æ€§å’Œä¸­æ–‡é‡Šä¹‰çš„æ€»å®½åº¦
                         int totalWidth = textwidth(words[i].pos) + textwidth(words[i].chinese) + 10;
 
-                        // ¼ÆËã´ÊĞÔµÄÎ»ÖÃ£¬Ê¹ÆäÎ»ÓÚÖĞÎÄÊÍÒåµÄ×ó±ß
+                        // è®¡ç®—è¯æ€§çš„ä½ç½®ï¼Œä½¿å…¶ä½äºä¸­æ–‡é‡Šä¹‰çš„å·¦è¾¹
                         int posX = centerX - (totalWidth / 2);
                         int posY = centerY;
 
-                        // ¼ÆËãÖĞÎÄÊÍÒåµÄÎ»ÖÃ£¬Ê¹ÆäÎ»ÓÚ´ÊĞÔµÄÓÒ±ß
+                        // è®¡ç®—ä¸­æ–‡é‡Šä¹‰çš„ä½ç½®ï¼Œä½¿å…¶ä½äºè¯æ€§çš„å³è¾¹
                         int chineseX = posX + textwidth(words[i].pos) + 5;
                         int chineseY = centerY;
-                        // »æÖÆ´ÊĞÔ
+                        // ç»˜åˆ¶è¯æ€§
                         outtextxy(posX, posY, words[i].pos);
 
-                        // »æÖÆÖĞÎÄÊÍÒå
+                        // ç»˜åˆ¶ä¸­æ–‡é‡Šä¹‰
                         outtextxy(chineseX, chineseY, words[i].chinese);
                         if (words[i].learned) {
-                            settextstyle(24, 0, "Î¢ÈíÑÅºÚ");
+                            settextstyle(24, 0, "å¾®è½¯é›…é»‘");
                             int wSpace = (500 - textwidth("Learned"))/2;
                             outtextxy(wSpace, 350, "Learned");
                         }
                         else {
-                            settextstyle(24, 0, "Î¢ÈíÑÅºÚ");
+                            settextstyle(24, 0, "å¾®è½¯é›…é»‘");
                             int wSpace = (500 - textwidth("Unlearned")) / 2;
                             outtextxy(wSpace, 350, "Unlearned");
                         }
 
                     }
-                    else {
-                        int wSpace = (500 - textwidth("No result")) / 2;
-                        outtextxy(wSpace, 350, "No Result");
-                    }
+                    
+                 
                 }
-                strcpy(searchWord, ""); // Çå¿ÕÊäÈë¿ò
-                clearrectangle(256 , 301, 399, 339); // Çå³ıÊäÈë¿òÖĞµÄÄÚÈİ
+                strcpy(searchWord, ""); // æ¸…ç©ºè¾“å…¥æ¡†
+                clearrectangle(256 , 301, 399, 339); // æ¸…é™¤è¾“å…¥æ¡†ä¸­çš„å†…å®¹
             }
             else if (ch < 128) {
                 int len = strlen(searchWord);
                 if (len < MAX_WORD_LENGTH - 1) {
                     searchWord[len] = ch;
                     searchWord[len + 1] = '\0';
-                    outtextxy(105 + textwidth("Type the English word:"), 305, searchWord); // ÏÔÊ¾¸üĞÂºóµÄÊäÈë¿òÄÚÈİ
+                    outtextxy(105 + textwidth("Type the English word:"), 305, searchWord); // æ˜¾ç¤ºæ›´æ–°åçš„è¾“å…¥æ¡†å†…å®¹
                 }
             }
         }
@@ -398,8 +412,8 @@ void drawStarButton() {
     drawButton(starBtn);
 }
 
-
 void switchToStartScreen() {
+    state = 1;
     clear_button = true;
     isMenuVisible = false;
 
@@ -408,13 +422,13 @@ void switchToStartScreen() {
     drawReturnButton();
     drawSkipButton();
     drawStarButton();
-    // ÖØĞÂÑ¡Ôñ10¸öµ¥´Ê
+    // é‡æ–°é€‰æ‹©10ä¸ªå•è¯
     selectRandomUnlearnedWords(words, wordCount, selectedWords, 10);
     currentWordIndex = 0;
-    inputVisible = true; // ÏÔÊ¾ÊäÈë¿ò
-    strcpy(inputWord, ""); // Çå¿ÕÊäÈë¿òÄÚÈİ
+    inputVisible = true; // æ˜¾ç¤ºè¾“å…¥æ¡†
+    strcpy(inputWord, ""); // æ¸…ç©ºè¾“å…¥æ¡†å†…å®¹
 
-    // ÖØĞÂÌî³ä¶şÎ¬Êı×é
+    // é‡æ–°å¡«å……äºŒç»´æ•°ç»„
     for (int i = 0; i < 10; i++) {
         sprintf(infoArray[i * 3], "%s", selectedWords[i].english);
         sprintf(infoArray[i * 3 + 1], "%s", selectedWords[i].pos);
@@ -427,7 +441,7 @@ void switchToStartScreen() {
 void starWordOnButtonClick() {
     if (inArea(msg.x, msg.y, 400, 600, 100, 40) && msg.message == WM_LBUTTONDOWN) {
         star_words(selectedWords[currentWordIndex].pos, selectedWords[currentWordIndex].chinese, selectedWords[currentWordIndex].english);
-        settextstyle(24,0, "Î¢ÈíÑÅºÚ");
+        settextstyle(24,0, "å¾®è½¯é›…é»‘");
         outtextxy(355, 575, "Star successfully!");
         
     }
@@ -439,12 +453,12 @@ void switchToStarBookScreen() {
 
 
 void switchToProgressScreen() {
-    clear_button = true; // ÉèÖÃ±êÖ¾Î»£¬±íÊ¾°´Å¥Ó¦¸ÃÏûÊ§
-    isMenuVisible = false; // ²Ëµ¥²»¿É¼û
+    clear_button = true; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ¶ˆå¤±
+    isMenuVisible = false; // èœå•ä¸å¯è§
     initgraph(500, 707, EX_SHOWCONSOLE);
     setbkcolor(WHITE);
     cleardevice();
-    drawReturnButton(); // »æÖÆ·µ»Ø°´Å¥
+    drawReturnButton(); // ç»˜åˆ¶è¿”å›æŒ‰é’®
     if (isProgressVisible) {
         int learned_words = 0;
         int unlearn_words = 0;
@@ -456,25 +470,25 @@ void switchToProgressScreen() {
                 unlearn_words++;
             }
         }
-        char progressString[100]; // È·±£Õâ¸öÊı×é×ã¹»´óÒÔ´æ·ÅÆ´½ÓºóµÄ×Ö·û´®
+        char progressString[100]; // ç¡®ä¿è¿™ä¸ªæ•°ç»„è¶³å¤Ÿå¤§ä»¥å­˜æ”¾æ‹¼æ¥åçš„å­—ç¬¦ä¸²
         sprintf(progressString, "%d/%d", learned_words, unlearn_words);
-        settextstyle(32, 0, "Î¢ÈíÑÅºÚ");
+        settextstyle(32, 0, "å¾®è½¯é›…é»‘");
         int wSpace = (500 - textwidth(progressString)) / 2;
         outtextxy(wSpace, 300, progressString);
         int total_words = learned_words + unlearn_words;
 
 
 
-        // ¼ÆËãÂÌÉ«ºÍ»ÒÉ«²¿·ÖµÄ³¤¶È
+        // è®¡ç®—ç»¿è‰²å’Œç°è‰²éƒ¨åˆ†çš„é•¿åº¦
         float greenLength = (float)learned_words / total_words * 300;
         float grayLength = (float)unlearn_words / total_words * 300;
 
 
-        // »æÖÆÒÑÑ§µ¥´ÊµÄÂÌÉ«²¿·Ö
+        // ç»˜åˆ¶å·²å­¦å•è¯çš„ç»¿è‰²éƒ¨åˆ†
         setfillcolor(GREEN);
         fillrectangle(100, 400, 100 + greenLength, 430);
 
-        // »æÖÆÎ´Ñ§µ¥´ÊµÄ»ÒÉ«²¿·Ö
+        // ç»˜åˆ¶æœªå­¦å•è¯çš„ç°è‰²éƒ¨åˆ†
         setfillcolor(RGB(240, 240, 240));
         fillrectangle(100 + greenLength, 400, 400, 430);
     }
@@ -482,18 +496,22 @@ void switchToProgressScreen() {
 }
 
 void switchToAboutScreen() {
-    clear_button = true; // ÉèÖÃ±êÖ¾Î»£¬±íÊ¾°´Å¥Ó¦¸ÃÏûÊ§
-    isMenuVisible = false; // ²Ëµ¥²»¿É¼û
+    clear_button = true; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ¶ˆå¤±
+    isMenuVisible = false; // èœå•ä¸å¯è§
     initgraph(500, 707, EX_SHOWCONSOLE);
     setbkcolor(RGB(249, 231, 255));
     cleardevice();
-    drawReturnButton(); // »æÖÆ·µ»Ø°´Å¥
+    drawReturnButton(); // ç»˜åˆ¶è¿”å›æŒ‰é’®
     settextstyle(48, 0, "bauhaus 93");
     settextcolor(RGB(113, 96, 232));
     outtextxy(340, 30, "ABOUT");
+
     settextstyle(24, 0, "bauhaus 93");
     settextcolor(RGB(113, 96, 232));
     outtextxy(25, 60, "FUNCTION INTRODUCTION:");
+    outtextxy(25, 400, "LEARNING RULES");
+    outtextxy(25, 640, "PRODUCER:");
+
     settextstyle(18, 0, "Arial");
     settextcolor(RGB(0, 0, 128));
     outtextxy(25, 100, "The program is made to help students to learn English more easily.");
@@ -501,76 +519,65 @@ void switchToAboutScreen() {
     settextstyle(18, 0, "bauhaus 93");
     settextcolor(RGB(113, 96, 232));
     outtextxy(25, 140, "START:");
+    outtextxy(25, 180, "STARBOOK:");
+    outtextxy(25, 260, "PROCESS");
+    outtextxy(25, 320, "SETTINGS");
+    outtextxy(25, 430, "LEARNING:");
+    outtextxy(25, 510, "STAR:");
+    outtextxy(25, 570, "SKIP");
+
     settextstyle(18, 0, "Arial");
     settextcolor(RGB(0, 0, 128));
     outtextxy(25, 160, "Cilck START to start your English learning journey! ");
-    settextstyle(18, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 180, "STARBOOK:");
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 200, "Click STARBOOK to review the words you have stared");
     outtextxy(25, 220, "during the process of reciting so that you can have a");
     outtextxy(25, 240, "better understanding of some difficult and complict words.");
-    settextstyle(18, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 260, "PROCESS");
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 280, "You can see how many words you have learned here and");
     outtextxy(25, 300, "view the concrete.");
-    settextstyle(18, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 320, "SETTINGS");
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 340, "You can change some system settings here such as");
     outtextxy(25, 360, "saving your learning data and so on.");
-    settextstyle(24, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 400, "LEARNING RULES");
-    settextstyle(18, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 430, "LEARNING:");
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 450, "In this program,every words should be  recited third times");
     outtextxy(25, 470, "correctly and continuely to be passed. Once you make a mistake,");
     outtextxy(25, 490, "the number of correct times will be cleared to zero.");
-    settextstyle(18, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 510, "STAR:");
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 530, "You can click STAR button ton star a word you think difficult.");
     outtextxy(25, 550, "Through this, you can have a better understanding of complicate words.");
-    settextstyle(18, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 570, "SKIP");
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 590, "Click SKIP to skip the words you think you have grasped.");
     outtextxy(25, 610, "And the words will be recognized as having been learned.");
-    settextstyle(24, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 640, "PRODUCER:");
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 670, "LiYuhang");
+}
 
+void switchtoSearchScreen() {
+    
+        clear_button = true; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ¶ˆå¤±
+        isMenuVisible = false; // èœå•ä¸å¯è§
+        initgraph(500, 707, EX_SHOWCONSOLE);
+        setbkcolor(WHITE);
+        cleardevice();
+        drawReturnButton(); // ç»˜åˆ¶è¿”å›æŒ‰é’®
+        settextstyle(20, 0, "å¾®è½¯é›…é»‘");
+        settextcolor(BLACK);
+        setfillcolor(RGB(240, 240, 240));
+        fillrectangle(100, 300, 400, 340);
+        setlinecolor(RGB(160, 160, 160));
+        rectangle(100, 300, 400, 340);
+        outtextxy(105, 305, "Type the English word:");
+        setbkmode(TRANSPARENT);
+
+    
 }
 
 void switchToSettingsScreen() {
-    clear_button = true; // ÉèÖÃ±êÖ¾Î»£¬±íÊ¾°´Å¥Ó¦¸ÃÏûÊ§
-    isMenuVisible = false; // ²Ëµ¥²»¿É¼û
+    clear_button = true; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ¶ˆå¤±
+    isMenuVisible = false; // èœå•ä¸å¯è§
     initgraph(500, 707, EX_SHOWCONSOLE);
     setbkcolor(WHITE);
     cleardevice();
-    drawReturnButton(); // »æÖÆ·µ»Ø°´Å¥
-    setting_button = true; // ÉèÖÃ°´Å¥×´Ì¬Îª¿É¼û
+    drawReturnButton(); // ç»˜åˆ¶è¿”å›æŒ‰é’®
+    setting_button = true; // è®¾ç½®æŒ‰é’®çŠ¶æ€ä¸ºå¯è§
 }
 
 void switchToReviewScreen() {
+    state = 0;
     clear_button = true;
     isMenuVisible = false;
 
@@ -580,91 +587,35 @@ void switchToReviewScreen() {
     drawSkipButton();
     drawStarButton();
 
-    // ÖØĞÂÑ¡ÔñÒÑÑ§Ï°µÄµ¥´Ê
+    // é‡æ–°é€‰æ‹©å·²å­¦ä¹ çš„å•è¯
     selectRandomlearnedWords(words, wordCount, selectedWords, 10);
     currentWordIndex = 0;
-    inputVisible = true; // ÏÔÊ¾ÊäÈë¿ò
-    strcpy(inputWord, ""); // Çå¿ÕÊäÈë¿òÄÚÈİ
+    inputVisible = true; // æ˜¾ç¤ºè¾“å…¥æ¡†
+    strcpy(inputWord, ""); // æ¸…ç©ºè¾“å…¥æ¡†å†…å®¹
 
-    // ÖØĞÂÌî³ä¶şÎ¬Êı×é
+    // é‡æ–°å¡«å……äºŒç»´æ•°ç»„
     for (int i = 0; i < 10; i++) {
         sprintf(infoArray[i * 3], "%s", selectedWords[i].english);
         sprintf(infoArray[i * 3 + 1], "%s", selectedWords[i].pos);
         sprintf(infoArray[i * 3 + 2], "%s", selectedWords[i].chinese);
     }
+    
     drawCurrentWord();
     drawStarButton();
 }
 
-void switchToSearchScreen() {
-    clear_button = true; // ÉèÖÃ±êÖ¾Î»£¬±íÊ¾°´Å¥Ó¦¸ÃÏûÊ§
-    isMenuVisible = false; // ²Ëµ¥²»¿É¼û
-    initgraph(500, 707, EX_SHOWCONSOLE);
-    setbkcolor(WHITE);
-    cleardevice();
-    drawReturnButton(); // »æÖÆ·µ»Ø°´Å¥
-
-}
 
 void returnToMenu() {
     if (inArea(msg.x, msg.y, 10, 10, 100, 40) && msg.message == WM_LBUTTONDOWN) {
-        clear_button = false; // ÉèÖÃ±êÖ¾Î»£¬±íÊ¾°´Å¥Ó¦¸ÃÏÔÊ¾
-        isMenuVisible = true; // ²Ëµ¥¿É¼û
-        setting_button = false; // ÖØÖÃÉèÖÃ°´Å¥×´Ì¬
+        updateWordsFromSelected();
+        clear_button = false; // è®¾ç½®æ ‡å¿—ä½ï¼Œè¡¨ç¤ºæŒ‰é’®åº”è¯¥æ˜¾ç¤º
+        isMenuVisible = true; // èœå•å¯è§
+        setting_button = false; // é‡ç½®è®¾ç½®æŒ‰é’®çŠ¶æ€
         isStartVisible = false;
         isSearchVisible = false;
-        background(); // ÖØ»æ²Ëµ¥½çÃæ
+        background(); // é‡ç»˜èœå•ç•Œé¢
     }
 }
-void start_to_learn() {
-    if (isMenuVisible && inArea(msg.x, msg.y, 180, 400, 140, 35) && msg.message == WM_LBUTTONDOWN) {
-        switchToStartScreen();
-    }
-}
-
-void star_to_review() {
-    if (isMenuVisible && inArea(msg.x, msg.y, 180, 435, 140, 35) && msg.message == WM_LBUTTONDOWN) {
-        switchToStarBookScreen();
-
-    }
-}
-
-void view_progress() {
-    if (isMenuVisible && inArea(msg.x, msg.y, 180, 470, 140, 35) && msg.message == WM_LBUTTONDOWN) {
-        switchToProgressScreen();
-    }
-}
-
-void review_words() {
-    if (isMenuVisible && inArea(msg.x, msg.y, 180, 540, 140, 35) && msg.message == WM_LBUTTONDOWN) {
-        switchToReviewScreen();
-    }
-}
-
-void search_words() {
-    if (isMenuVisible && inArea(msg.x, msg.y, 180, 575, 140, 35) && msg.message == WM_LBUTTONDOWN) {
-        switchToProgressScreen();
-        settextstyle(20, 0, "Î¢ÈíÑÅºÚ");
-        settextcolor(BLACK);
-        setfillcolor(RGB(240, 240, 240));
-        fillrectangle(100, 300, 400, 340);
-        setlinecolor(RGB(160, 160, 160));
-        rectangle(100, 300, 400, 340);
-        outtextxy(105, 305, "Type the English word:");
-        setbkmode(TRANSPARENT);
-
-    }
-}
-
-
-void about_program() {
-    if (isMenuVisible && inArea(msg.x, msg.y, 180, 505, 140, 35) && msg.message == WM_LBUTTONDOWN) {
-        switchToAboutScreen();
-    }
-}
-
-Button clearDataBtn = { 180, 400, 160, 40, "Clear learning data", false, "" };
-Button saving = { 180, 200, 160, 40, "Save learning data", false, "" };
 
 void settings() {
     if (isMenuVisible && inArea(msg.x, msg.y, 180, 610, 140, 35) && msg.message == WM_LBUTTONDOWN) {
@@ -681,9 +632,9 @@ void exit_program() {
 }
 
 void clearTooltipArea() {
-    // Çå³ıÌáÊ¾ĞÅÏ¢ÇøÓò£¬ÕâÀï¼ÙÉèÌáÊ¾ĞÅÏ¢µÄ×î´ó¿í¶ÈÎª200£¬¸ß¶ÈÎª50
+    // æ¸…é™¤æç¤ºä¿¡æ¯åŒºåŸŸï¼Œè¿™é‡Œå‡è®¾æç¤ºä¿¡æ¯çš„æœ€å¤§å®½åº¦ä¸º200ï¼Œé«˜åº¦ä¸º50
     setfillcolor(WHITE);
-    clearrectangle(320, 400, 500, 700); // ¸ù¾İÊµ¼ÊĞèÒªµ÷ÕûÕâ¸öÇøÓò
+    clearrectangle(320, 400, 500, 700); // æ ¹æ®å®é™…éœ€è¦è°ƒæ•´è¿™ä¸ªåŒºåŸŸ
 }
 
 int main() {
@@ -699,7 +650,7 @@ int main() {
     }
     fclose(file);
 
-    // ³õÊ¼»¯infoArray
+    // åˆå§‹åŒ–infoArray
     infoArray = (char**)malloc(10 * 3 * sizeof(char*));
     for (int i = 0; i < 10 * 3; i++) {
         infoArray[i] = (char*)malloc(MAX_WORD_LENGTH * sizeof(char));
@@ -715,57 +666,59 @@ int main() {
     Button searchBtn = { 180, 575, 140, 35, "SEARCH", true, "search words" };
     Button settingBtn = { 180, 610, 140, 35, "SETTINGS", true, "Change some settings" };
     Button exitBtn = { 180, 645, 140, 35, "EXIT", false, "Tap to exit the program" };
+    Button clearDataBtn = { 180, 400, 160, 40, "Clear learning data", false, "" };
+    Button saving = { 180, 200, 160, 40, "Save learning data", false, "" };
 
     
     while (true) {
         setbkmode(TRANSPARENT);
-        msg.message = 0; // ÖØÖÃÏûÏ¢
-        if (peekmessage(&msg, EX_MOUSE)) { // ¼ì²éÊÇ·ñÓĞÊó±êÏûÏ¢
-            // ´¦Àí²Ëµ¥½çÃæµÄ°´Å¥µã»÷ÊÂ¼ş
+        msg.message = 0; // é‡ç½®æ¶ˆæ¯
+        if (peekmessage(&msg, EX_MOUSE)) { // æ£€æŸ¥æ˜¯å¦æœ‰é¼ æ ‡æ¶ˆæ¯
+            // å¤„ç†èœå•ç•Œé¢çš„æŒ‰é’®ç‚¹å‡»äº‹ä»¶
             if (isMenuVisible) {
                 
                 if (inArea(msg.x, msg.y, startBtn.x, startBtn.y, startBtn.w, startBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = true;
                     isSearchVisible = false;
                     isProgressVisible = false;
-                    strcpy(inputWord, ""); // Çå¿ÕÊäÈë¿ò
-                    start_to_learn();
+                    strcpy(inputWord, ""); // æ¸…ç©ºè¾“å…¥æ¡†
+                    switchToStartScreen();
                 }
                 else if (inArea(msg.x, msg.y, starBtn.x, starBtn.y, starBtn.w, starBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
                     isSearchVisible = false;
                     isProgressVisible = false;
-                    star_to_review();
+                    switchToStarBookScreen();
                 }
                 else if (inArea(msg.x, msg.y, progressBtn.x, progressBtn.y, progressBtn.w, progressBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
                     isSearchVisible = false;
                     isProgressVisible = true;
-                    view_progress();
+                    switchToProgressScreen();
                 }
                 else if (inArea(msg.x, msg.y, reviewBtn.x, reviewBtn.y, reviewBtn.w, reviewBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = true;
                     isSearchVisible = false;
                     isProgressVisible = false;
-                    review_words();
+                    switchToReviewScreen();
                 }
                 else if (inArea(msg.x, msg.y, searchBtn.x, searchBtn.y, searchBtn.w, searchBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isSearchVisible = true;
                     isStartVisible = false;
                     isProgressVisible = false;
-                    search_words();
+                    switchtoSearchScreen();
                 }
                 else if (inArea(msg.x, msg.y, aboutBtn.x, aboutBtn.y, aboutBtn.w, aboutBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
                     isSearchVisible = false;
                     isProgressVisible = false;
-                    about_program();
+                    switchToAboutScreen();
                 }
                 else if (inArea(msg.x, msg.y, settingBtn.x, settingBtn.y, settingBtn.w, settingBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
                     isSearchVisible = false;
                     isProgressVisible = false;
-                    settings();
+                    switchToSettingsScreen();
                 }
                 else if (inArea(msg.x, msg.y, exitBtn.x, exitBtn.y, exitBtn.w, exitBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
@@ -775,7 +728,7 @@ int main() {
                 }
             }
             else {
-                // ´¦Àí·Ç²Ëµ¥½çÃæµÄ°´Å¥µã»÷ÊÂ¼ş
+                // å¤„ç†éèœå•ç•Œé¢çš„æŒ‰é’®ç‚¹å‡»äº‹ä»¶
                
                 if (inArea(msg.x, msg.y, 400, 600, 100, 40) && msg.message == WM_LBUTTONDOWN) {
                     starWordOnButtonClick();
@@ -808,13 +761,14 @@ int main() {
                 if (inArea(msg.x, msg.y, 180, 200, 160, 40) && msg.message == WM_LBUTTONDOWN) {
                     writeWordsToCSV("D:/C_data/practice9/final_task/english.csv", words, wordCount);
                     int wSpace = (500 - textwidth("Save learning data successfully!"))/2;
-                    settextstyle(24, 0, "Î¢ÈíÑÅºÚ");
+                    settextstyle(24, 0, "å¾®è½¯é›…é»‘");
                     outtextxy(wSpace, 300, "Save learning data successfully!");
                 }
 
                 if (inArea(msg.x, msg.y, 180, 400, 160, 40) && msg.message == WM_LBUTTONDOWN) {
                     resetLearningData("D:/C_data/practice9/final_task/english.csv", words, wordCount);
-                    settextstyle(24, 0, "Î¢ÈíÑÅºÚ");
+                    resetStarData("D:/stared_english.csv");
+                    settextstyle(24, 0, "å¾®è½¯é›…é»‘");
                     settextcolor(BLACK);
                     int wSpace = (500 - textwidth("Learning data has been cleared!")) / 2;
                     outtextxy(wSpace, 500, "Learning data has been cleared!");
@@ -827,7 +781,7 @@ int main() {
         EndBatchDraw();
     }
 
-    // ÊÍ·ÅinfoArray·ÖÅäµÄÄÚ´æ
+    // é‡Šæ”¾infoArrayåˆ†é…çš„å†…å­˜
     for (int i = 0; i < 10 * 3; i++) {
         free(infoArray[i]);
     }
@@ -835,5 +789,6 @@ int main() {
 
     return 0;
 }
+
 
 
