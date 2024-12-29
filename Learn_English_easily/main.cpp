@@ -9,52 +9,64 @@
 #define MAX_WORD_LENGTH 100
 #define MAX_WORDS 1000 // 假设最多有1000个单词
 
-Word words[MAX_WORDS]; // 存储所有单词
-int wordCount = 0;
-Word selectedWords[10]; // 存储10个选中的单词
 int currentWordIndex = 0; // 当前显示的单词索引
 bool skipButton = false; // 控制“skip”按钮是否可见的标志位
-char inputWord[MAX_WORD_LENGTH]; // 存储用户输入的英文单词
 bool inputVisible = true; // 控制输入框是否可见的标志位
-bool isStartVisible = false;
-bool isSearchVisible = false;
-bool isProgressVisible = false;
-bool allLearned = false;
+bool isStartVisible = false;//控制开始界面是否展示
+bool isSearchVisible = false;//控制搜索界面是否展示
+bool isProgressVisible = false;//控制进度界面是否展示
+bool allLearned = false;//默认一轮英语学习尚未全部学会
+bool setting_button = false;//控制设置界面按钮是否绘制
+bool clear_button = false;//同上
+bool isMenuVisible = true; // 控制菜单是否可见的标志位
+/*以上布尔类型变量都是为了防止不同界面绘制的图形出现在其他界面而设置的*/
 bool checkWord(const char* userWord, const char* correctWord) {
-    return strcmp(userWord, correctWord) == 0;
+    return strcmp(userWord, correctWord) == 0;//用来检测用户输入是否正确，用于学习和复习
 }
-char searchWord[MAX_WORD_LENGTH];
-int state = 0;//1为学习，0为复习
 
+int wordCount = 0;//初始化单词索引
+Word words[MAX_WORDS]; // 存储所有单词
+Word selectedWords[10]; // 存储10个选中的单词
+char inputWord[MAX_WORD_LENGTH]; // 存储用户输入的英文单词，用于学习/复习界面
+char searchWord[MAX_WORD_LENGTH];//同上，用于搜索界面
+int state = 0;//1为学习，0为复习，这个布尔类型用来防止用户review界面后没有进行完整的复习就返回主菜单导致已学会单词被恢复为未学习状态
 // 按钮结构体定义
 typedef struct {
     int x, y, w, h; // 按钮的位置和大小
     const char* text; // 按钮上显示的文本
-    bool need_tip;
+    bool need_tip;//是否需要提示信息
     const char* tooltip; // 按钮的提示信息
 } Button;
 
-bool setting_button = false;
-bool clear_button = false;
-bool isMenuVisible = true; // 控制菜单是否可见的标志位
+Button startBtn = { 180, 365, 140, 35, "START TO LEARN", true, "Tap to learn English!" };
+Button starbookBtn = { 180, 400, 140, 35, "STAR BOOK", true, "Review words you stared." };
+Button progressBtn = { 180, 435, 140, 35, "PROGRESS", true, "Tap to view progress." };
+Button reviewBtn = { 180, 470, 140, 35, "REVIEW", true, "Review the words learned" };
+Button searchBtn = { 180, 505, 140, 35, "SEARCH", true, "search words" };
+Button settingBtn = { 180, 540, 140, 35, "SETTINGS", true, "Change some settings" };
+Button helpBtn = { 180, 575, 140, 35, "HELP", true, "How to use this program" };
+Button aboutBtn = { 180, 610, 140, 35, "ABOUT", true, "About this program" };
+Button exitBtn = { 180, 645, 140, 35, "EXIT", false, "Tap to exit the program" };
+Button clearDataBtn = { 180, 400, 160, 40, "Clear learning data", false, "" };
+Button saving = { 180, 200, 160, 40, "Save learning data", false, "" };
+Button skipBtn = { 400, 650, 100, 40, "SKIP", false, "" };
+Button returnBtn = { 10, 10, 100, 40, "RETURN", false, " " };
+Button starBtn = { 400, 600, 100, 40, "STAR", true, "Mark this word as difficult" };
 
-ExMessage msg = { 0 };
+ExMessage msg = { 0 };//将鼠标信息归零，防止按钮连续多次读入用户信息
 
-
-
-// 全局变量infoArray
-char** infoArray = NULL;
+char** infoArray = NULL;// 全局变量infoArray，用来在界面上展示学习/复习/搜索的单词中文和词性
 void drawText() {
     settextstyle(20, 0, "bauhaus 93");
     settextcolor(BLACK);
     setbkmode(TRANSPARENT);
-}
+}//默认的字体风格
 
 bool inArea(int mx, int my, int x, int y, int w, int h) {
     return mx > x && mx < x + w && my > y && my < y + h;
-}
+}//检测鼠标是否点击某个按钮
 
-void drawButton(Button btn) {
+void drawButton(Button btn) {//用来绘制按钮
     settextstyle(20, 0, "bauhaus 93");
     if (inArea(msg.x, msg.y, btn.x, btn.y, btn.w, btn.h)) {
         setfillcolor(RGB(93, 107, 153));
@@ -70,16 +82,16 @@ void drawButton(Button btn) {
     outtextxy(btn.x + hSpace, btn.y + vSpace, btn.text);
 
     // 仅在鼠标悬停时绘制提示信息
-    if (inArea(msg.x, msg.y, btn.x, btn.y, btn.w, btn.h) && btn.need_tip == true) {
-        setfillcolor(RGB(173, 216, 230)); // 浅蓝色
-        settextcolor(RGB(0, 0, 128)); // 深蓝色
+    if (inArea(msg.x, msg.y, btn.x, btn.y, btn.w, btn.h) && btn.need_tip == true) {//如果有提示信息，则在按钮旁边展示
+        setfillcolor(RGB(173, 216, 230)); // 
+        settextcolor(RGB(0, 0, 128)); // 
         settextstyle(16, 0, "Arial");
         fillroundrect(btn.x + btn.w + 10, btn.y, btn.x + btn.w + textwidth(btn.tooltip) + 20, btn.y + textheight(btn.tooltip) + 10, 5, 5);
         outtextxy(btn.x + btn.w + 15, btn.y + 5, btn.tooltip);
     }
 }
 
-void background() {
+void background() {//用来绘制主界面背景
     initgraph(500, 707, EX_SHOWCONSOLE);
     setlinecolor(RGB(128, 128, 128));
     setlinestyle(PS_SOLID, 1);
@@ -91,42 +103,17 @@ void background() {
     int title_x = (500 - textwidth("Recite English Easily!!!")) / 2;
     int title_y = (500 - textheight("Recite English Easily!!!")) / 2;
     outtextxy(title_x, title_y, "Recite English Easily!!!");
+    settextstyle(28, 0, "微软雅黑");
+    int wSpace = (500 - textwidth("V 0.1.6     版权所有：李宇航"))/2;
+    outtextxy(wSpace, 300, "V 0.1.6     版权所有：李宇航");
 }
 
-
-void drawReturnButton() {
-    Button returnBtn = { 10, 10, 100, 40, "RETURN", false, " " };
-    drawText();
-    drawButton(returnBtn);
-}
-
-void clearCurrentWordArea() {
+void clearCurrentWordArea() {//学习单词时，跳转至下一个单词时清除上一个单词的词性和中文绘制
     setfillcolor(WHITE); // 设置填充颜色为白色，以覆盖之前的文本
-    // 计算需要清除的区域，这里假设单词显示的最大高度为100像素
-    int clearHeight = 100;
-    clearrectangle(110, 200, 500, 200 + clearHeight); // 只清除单词的区域
+    clearrectangle(110, 200, 500, 300); // 只清除单词的区域
 }
 
-void getUserInput() {
-    inputVisible = true; // 显示输入框
-    char userWord[MAX_WORD_LENGTH];
-    // 显示输入框并获取用户输入
-    InputBox(userWord, MAX_WORD_LENGTH, "Enter the word");
-    if (userWord != NULL) {
-        // 检查用户输入的单词是否正确
-        if (checkWord(userWord, selectedWords[currentWordIndex].english)) {
-            // 单词正确
-            printf("Correct!\n");
-        }
-        else {
-            // 单词错误
-            printf("Wrong! The correct word is: %s\n", selectedWords[currentWordIndex].english);
-        }
-        inputVisible = false; // 隐藏输入框
-    }
-}
-
-void updateWordsFromSelected() {
+void updateWordsFromSelected() {//学完一轮单词后，将随机抽取的10个单词组成的随机数组的单词学会状态赋值给words数组中对应的单词
     if (state == 1) {
         for (int i = 0; i < 10; i++) {
             int originalIndex = selectedWords[i].index; // 假设每个Word有一个指向words数组中原始单词的索引
@@ -136,7 +123,7 @@ void updateWordsFromSelected() {
     }
 }
 
-void drawCurrentWord() {
+void drawCurrentWord() {//用来跳转单词
     if (!isMenuVisible && isStartVisible) { // 只在 START 界面绘制
         settextstyle(48, 0, "微软雅黑");
         settextcolor(BLACK);
@@ -197,7 +184,7 @@ void drawCurrentWord() {
                 outtextxy(105 + textwidth("Type the English word:"), 305, tempWord);
             }
         }
-        else {
+        else {//没有未学会的单词时，自动返回菜单
             updateWordsFromSelected();
             clear_button = false; // 设置标志位，表示按钮应该显示
             isMenuVisible = true; // 菜单可见
@@ -209,7 +196,7 @@ void drawCurrentWord() {
     }
 }
 
-void reviewUnlearnedWords() {
+void reviewUnlearnedWords() {//用来重复提问第一轮（这里只每个单词都已提问一遍后）学习后还未学会的单词
     allLearned = true;
     for (int i = 0; i < 10; i++) {
         if (!selectedWords[i].learned) {
@@ -222,7 +209,6 @@ void reviewUnlearnedWords() {
     }
     if (allLearned) {
         updateWordsFromSelected();
-        printf("All words have been learned. Starting a new cycle.\n");
         clear_button = false; // 设置标志位，表示按钮应该显示
         isMenuVisible = true; // 菜单可见
         setting_button = false; // 重置设置按钮状态
@@ -231,21 +217,20 @@ void reviewUnlearnedWords() {
 }
 
 
-// 在主循环中处理用户输入
-void processInput() {
+void processInput() {// 在主循环中处理用户输入
     
-    if (!isMenuVisible && inputVisible && isStartVisible) {
+    if (!isMenuVisible && inputVisible && isStartVisible) {//确保只有在开始学习界面使用
         
         if (_kbhit()) {
-            char ch = _getch();
-            if (ch == '\b') {
+            char ch = _getch();//读取用户键盘消息
+            if (ch == '\b') {//按下Backspace键时，清除上一个输入的字母
                 if (strlen(inputWord) > 0) {
                     inputWord[strlen(inputWord) - 1] = '\0';
                     clearrectangle(105 + textwidth("Type the English word:"), 305, 500, 340); // 清除输入框中的内容
                     outtextxy(105 + textwidth("Type the English word:"), 305, inputWord); // 显示更新后的输入框内容
                 }
             }
-            else if (ch == '\r') {
+            else if (ch == '\r') {//按下回车时，清除用户输入，并将用户输入单词与正确答案进行比对
                 setfillcolor(WHITE); // 设置填充颜色为白色，以清除之前的输出
                 clearrectangle(100, 350, 400, 390); // 清除之前的输出区域
 
@@ -272,7 +257,6 @@ void processInput() {
                     setbkmode(TRANSPARENT);
                     outtextxy(100, 350, errorMsg);
                     selectedWords[currentWordIndex].correctAnswers = 0; // 答错一次，答对次数归零
-                    selectedWords[currentWordIndex].learned = false; // 答错一次，重置为未学会状态
                 }
                 strcpy(inputWord, ""); // 清空输入框
                 inputVisible = false;
@@ -400,17 +384,6 @@ void searchInput() {
     }
 }
 
-void drawSkipButton() {
-    Button skipBtn = { 400, 650, 100, 40, "SKIP", false, "" };
-    drawText();
-    drawButton(skipBtn);
-}
-
-void drawStarButton() {
-    Button starBtn = { 400, 600, 100, 40, "STAR", true, "Mark this word as difficult" };
-    drawText();
-    drawButton(starBtn);
-}
 
 void switchToStartScreen() {
     state = 1;
@@ -419,9 +392,9 @@ void switchToStartScreen() {
 
     setbkcolor(WHITE);
     cleardevice();
-    drawReturnButton();
-    drawSkipButton();
-    drawStarButton();
+    drawButton(returnBtn);
+    drawButton(skipBtn);
+    drawButton(starBtn);
     // 重新选择10个单词
     selectRandomUnlearnedWords(words, wordCount, selectedWords, 10);
     currentWordIndex = 0;
@@ -435,7 +408,7 @@ void switchToStartScreen() {
         sprintf(infoArray[i * 3 + 2], "%s", selectedWords[i].chinese);
     }
     drawCurrentWord();
-    drawStarButton();
+    drawButton(starBtn);
 }
 
 void starWordOnButtonClick() {
@@ -458,7 +431,7 @@ void switchToProgressScreen() {
     initgraph(500, 707, EX_SHOWCONSOLE);
     setbkcolor(WHITE);
     cleardevice();
-    drawReturnButton(); // 绘制返回按钮
+    drawButton(returnBtn); // 绘制返回按钮
     if (isProgressVisible) {
         int learned_words = 0;
         int unlearn_words = 0;
@@ -495,39 +468,38 @@ void switchToProgressScreen() {
     
 }
 
-void switchToAboutScreen() {
+void switchToHelpScreen() {
     clear_button = true; // 设置标志位，表示按钮应该消失
     isMenuVisible = false; // 菜单不可见
     initgraph(500, 707, EX_SHOWCONSOLE);
     setbkcolor(RGB(249, 231, 255));
     cleardevice();
-    drawReturnButton(); // 绘制返回按钮
+    drawButton(returnBtn); // 绘制返回按钮
     settextstyle(48, 0, "bauhaus 93");
     settextcolor(RGB(113, 96, 232));
-    outtextxy(340, 30, "ABOUT");
+    outtextxy(340, 30, "HELP");
 
     settextstyle(24, 0, "bauhaus 93");
     settextcolor(RGB(113, 96, 232));
     outtextxy(25, 60, "FUNCTION INTRODUCTION:");
-    outtextxy(25, 400, "LEARNING RULES");
-    outtextxy(25, 640, "PRODUCER:");
+    outtextxy(25, 470, "LEARNING RULES:");
+    
+    settextstyle(18, 0, "bauhaus 93");
+    settextcolor(RGB(113, 96, 232));
+    outtextxy(25, 140, "START:");
+    outtextxy(25, 180, "STARBOOK:");
+    outtextxy(25, 260, "PROCESS:");
+    outtextxy(25, 320, "SETTINGS:");
+    outtextxy(25, 380, "REVIEW:");
+    outtextxy(25, 420, "SEARCH:");
+    outtextxy(25, 500, "LEARNING:");
+    outtextxy(25, 580, "STAR:");
+    outtextxy(25, 640, "SKIP:");
 
     settextstyle(18, 0, "Arial");
     settextcolor(RGB(0, 0, 128));
     outtextxy(25, 100, "The program is made to help students to learn English more easily.");
     outtextxy(25, 120, "You can click the button in the menu to choose different function.");
-    settextstyle(18, 0, "bauhaus 93");
-    settextcolor(RGB(113, 96, 232));
-    outtextxy(25, 140, "START:");
-    outtextxy(25, 180, "STARBOOK:");
-    outtextxy(25, 260, "PROCESS");
-    outtextxy(25, 320, "SETTINGS");
-    outtextxy(25, 430, "LEARNING:");
-    outtextxy(25, 510, "STAR:");
-    outtextxy(25, 570, "SKIP");
-
-    settextstyle(18, 0, "Arial");
-    settextcolor(RGB(0, 0, 128));
     outtextxy(25, 160, "Cilck START to start your English learning journey! ");
     outtextxy(25, 200, "Click STARBOOK to review the words you have stared");
     outtextxy(25, 220, "during the process of reciting so that you can have a");
@@ -536,14 +508,16 @@ void switchToAboutScreen() {
     outtextxy(25, 300, "view the concrete.");
     outtextxy(25, 340, "You can change some system settings here such as");
     outtextxy(25, 360, "saving your learning data and so on.");
-    outtextxy(25, 450, "In this program,every words should be  recited third times");
-    outtextxy(25, 470, "correctly and continuely to be passed. Once you make a mistake,");
-    outtextxy(25, 490, "the number of correct times will be cleared to zero.");
-    outtextxy(25, 530, "You can click STAR button ton star a word you think difficult.");
-    outtextxy(25, 550, "Through this, you can have a better understanding of complicate words.");
-    outtextxy(25, 590, "Click SKIP to skip the words you think you have grasped.");
-    outtextxy(25, 610, "And the words will be recognized as having been learned.");
-    outtextxy(25, 670, "LiYuhang");
+    outtextxy(25, 400, "You can review the words you have learned here to enhance memory");
+    outtextxy(25, 440, "You can search words here.Only supports search chinese by english");
+    outtextxy(25, 520, "In this program,every words should be recited third times");
+    outtextxy(25, 540, "correctly and continuely to be passed. Once you make a mistake,");
+    outtextxy(25, 560, "the number of correct times will be cleared to zero.");
+    outtextxy(25, 600, "You can click STAR button ton star a word you think difficult.");
+    outtextxy(25, 620, "Through this, you can have a better understanding of complicate words.");
+    outtextxy(25, 660, "Click SKIP to skip the words you think you have grasped.");
+    outtextxy(25, 680, "And the words will be recognized as having been learned.");
+    
 }
 
 void switchtoSearchScreen() {
@@ -553,7 +527,7 @@ void switchtoSearchScreen() {
         initgraph(500, 707, EX_SHOWCONSOLE);
         setbkcolor(WHITE);
         cleardevice();
-        drawReturnButton(); // 绘制返回按钮
+        drawButton(returnBtn); // 绘制返回按钮
         settextstyle(20, 0, "微软雅黑");
         settextcolor(BLACK);
         setfillcolor(RGB(240, 240, 240));
@@ -572,8 +546,45 @@ void switchToSettingsScreen() {
     initgraph(500, 707, EX_SHOWCONSOLE);
     setbkcolor(WHITE);
     cleardevice();
-    drawReturnButton(); // 绘制返回按钮
+    drawButton(returnBtn); // 绘制返回按钮
     setting_button = true; // 设置按钮状态为可见
+}
+
+void switchToAboutScreen() {
+    clear_button = true; // 设置标志位，表示按钮应该消失
+    isMenuVisible = false; // 菜单不可见
+    initgraph(500, 707, EX_SHOWCONSOLE);
+    setbkcolor(RGB(249, 231, 255));
+    cleardevice();
+    drawButton(returnBtn);// 绘制返回按钮
+    settextstyle(48, 0, "bauhaus 93");
+    settextcolor(RGB(113, 96, 232));
+    outtextxy(340, 30, "ABOUT");
+
+    settextstyle(36, 0, "bauhaus 93");
+    settextcolor(RGB(113, 96, 232));
+    outtextxy(25, 60, "About program:");
+    outtextxy(25, 240, "About producer:");
+
+    settextstyle(28, 0, "bauhaus 93");
+    settextcolor(RGB(113, 96, 232));
+    outtextxy(25, 90, "name:");
+    outtextxy(25, 130, "version:");
+    outtextxy(25, 170, "development time:");
+    outtextxy(25, 270, "name:");
+    outtextxy(25, 310, "student ID:");
+    outtextxy(25, 350, "major:");
+    outtextxy(25, 395, "class:");
+
+    settextstyle(18, 0, "Arial");
+    settextcolor(RGB(0, 0, 128));
+    outtextxy(25, 115, "RECITE ENGLISH EASILY!!!");
+    outtextxy(25, 155, "v 0.1.6");
+    outtextxy(25, 195, "2024/12/22");
+    outtextxy(25, 295, "LiYuhang/李宇航");
+    outtextxy(25, 335, "8002124208");
+    outtextxy(25, 375, "Software engineering/软件工程");
+    outtextxy(25, 418, "2407");
 }
 
 void switchToReviewScreen() {
@@ -583,9 +594,9 @@ void switchToReviewScreen() {
 
     setbkcolor(WHITE);
     cleardevice();
-    drawReturnButton();
-    drawSkipButton();
-    drawStarButton();
+    drawButton(returnBtn);
+    drawButton(skipBtn);
+    drawButton(starBtn);
 
     // 重新选择已学习的单词
     selectRandomlearnedWords(words, wordCount, selectedWords, 10);
@@ -601,7 +612,7 @@ void switchToReviewScreen() {
     }
     
     drawCurrentWord();
-    drawStarButton();
+    drawButton(starBtn);
 }
 
 
@@ -634,7 +645,7 @@ void exit_program() {
 void clearTooltipArea() {
     // 清除提示信息区域，这里假设提示信息的最大宽度为200，高度为50
     setfillcolor(WHITE);
-    clearrectangle(320, 400, 500, 700); // 根据实际需要调整这个区域
+    clearrectangle(320, 365, 500, 700); // 根据实际需要调整这个区域
 }
 
 int main() {
@@ -658,18 +669,6 @@ int main() {
 
     background();
 
-    Button startBtn = { 180, 400, 140, 35, "START TO LEARN", true, "Tap to learn English!" };
-    Button starBtn = { 180, 435, 140, 35, "STAR BOOK", true, "Review words you stared." };
-    Button progressBtn = { 180, 470, 140, 35, "PROGRESS", true, "Tap to view progress." };
-    Button aboutBtn = { 180, 505, 140, 35, "ABOUT", true, "About this program." };
-    Button reviewBtn = { 180, 540, 140, 35, "REVIEW", true, "Review the words learned" };
-    Button searchBtn = { 180, 575, 140, 35, "SEARCH", true, "search words" };
-    Button settingBtn = { 180, 610, 140, 35, "SETTINGS", true, "Change some settings" };
-    Button exitBtn = { 180, 645, 140, 35, "EXIT", false, "Tap to exit the program" };
-    Button clearDataBtn = { 180, 400, 160, 40, "Clear learning data", false, "" };
-    Button saving = { 180, 200, 160, 40, "Save learning data", false, "" };
-
-    
     while (true) {
         setbkmode(TRANSPARENT);
         msg.message = 0; // 重置消息
@@ -684,7 +683,7 @@ int main() {
                     strcpy(inputWord, ""); // 清空输入框
                     switchToStartScreen();
                 }
-                else if (inArea(msg.x, msg.y, starBtn.x, starBtn.y, starBtn.w, starBtn.h) && msg.message == WM_LBUTTONDOWN) {
+                else if (inArea(msg.x, msg.y, starbookBtn.x, starbookBtn.y, starbookBtn.w, starbookBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
                     isSearchVisible = false;
                     isProgressVisible = false;
@@ -708,17 +707,23 @@ int main() {
                     isProgressVisible = false;
                     switchtoSearchScreen();
                 }
-                else if (inArea(msg.x, msg.y, aboutBtn.x, aboutBtn.y, aboutBtn.w, aboutBtn.h) && msg.message == WM_LBUTTONDOWN) {
+                else if (inArea(msg.x, msg.y, helpBtn.x, helpBtn.y, helpBtn.w, helpBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
                     isSearchVisible = false;
                     isProgressVisible = false;
-                    switchToAboutScreen();
+                    switchToHelpScreen();
                 }
                 else if (inArea(msg.x, msg.y, settingBtn.x, settingBtn.y, settingBtn.w, settingBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
                     isSearchVisible = false;
                     isProgressVisible = false;
                     switchToSettingsScreen();
+                }
+                else if (inArea(msg.x, msg.y,aboutBtn.x, aboutBtn.y, aboutBtn.w, aboutBtn.h) && msg.message == WM_LBUTTONDOWN) {
+                    isStartVisible = false;
+                    isSearchVisible = false;
+                    isProgressVisible = false;
+                    switchToAboutScreen();
                 }
                 else if (inArea(msg.x, msg.y, exitBtn.x, exitBtn.y, exitBtn.w, exitBtn.h) && msg.message == WM_LBUTTONDOWN) {
                     isStartVisible = false;
@@ -743,16 +748,17 @@ int main() {
         if (isMenuVisible && !clear_button) {
             clearTooltipArea();
             drawButton(startBtn);
-            drawButton(starBtn);
+            drawButton(starbookBtn);
             drawButton(progressBtn);
             drawButton(aboutBtn);
             drawButton(reviewBtn);
             drawButton(searchBtn);
             drawButton(settingBtn);
+            drawButton(helpBtn);
             drawButton(exitBtn);
         }
         if (clear_button) {
-            drawReturnButton();
+            drawButton(returnBtn);
         }
         if (setting_button) {
             drawButton(saving);
@@ -789,6 +795,3 @@ int main() {
 
     return 0;
 }
-
-
-
